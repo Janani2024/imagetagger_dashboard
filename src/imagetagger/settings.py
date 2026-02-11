@@ -249,7 +249,7 @@ class Render(Base):
     ALLOWED_HOSTS = values.ListValue(environ_prefix='IT', default=['*'])
     DOWNLOAD_BASE_URL = values.Value(environ_prefix='IT', environ_required=True)
     STATIC_ROOT = values.Value(environ_prefix='IT', default=path_join(BASE_DIR, 'staticfiles'))
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
