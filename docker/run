@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+runuser -u www-data -- /app/src/manage.py collectstatic --no-input
+runuser -u www-data -- /app/src/manage.py migrate
+
+nginx
+exec uwsgi /etc/uwsgi/imagetagger.ini
+

@@ -1,0 +1,46 @@
+databases:
+  - name: imagetagger-db
+    plan: free
+    databaseName: imagetagger
+    user: imagetagger
+
+services:
+  - type: web
+    name: imagetagger
+    runtime: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "cd src && gunicorn imagetagger.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: imagetagger.settings
+      - key: DJANGO_CONFIGURATION
+        value: Render
+      - key: IT_SECRET_KEY
+        generateValue: true
+      - key: IT_DB_HOST
+        fromDatabase:
+          name: imagetagger-db
+          property: host
+      - key: IT_DB_PORT
+        fromDatabase:
+          name: imagetagger-db
+          property: port
+      - key: IT_DB_NAME
+        fromDatabase:
+          name: imagetagger-db
+          property: database
+      - key: IT_DB_USER
+        fromDatabase:
+          name: imagetagger-db
+          property: user
+      - key: IT_DB_PASSWORD
+        fromDatabase:
+          name: imagetagger-db
+          property: password
+      - key: IT_DOWNLOAD_BASE_URL
+        value: https://imagetagger.onrender.com
+      - key: IT_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.12.3"

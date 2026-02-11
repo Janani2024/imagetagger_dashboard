@@ -1,0 +1,30 @@
+{% extends 'base/base.html' %}
+{% block bodyblock %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Profile of {{ user.username }}</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    Points: {{ user.points }}
+                    <h3>Teams:</h3>
+                    <ul>
+                        {% for team in teams %}
+                            <li><a href="{% url 'users:team' team.id %}">{{team.name}}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% if own_profile %}
+            <a href="/users/user/{{ user.id }}/delete/">
+                <button class="btn btn-danger" type="submit">Delete this account</button>
+            </a>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
