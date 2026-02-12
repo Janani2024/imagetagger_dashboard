@@ -63,7 +63,10 @@ def create_export(request, image_set_id):
     if imageset.has_perm('create_export', request.user):
         export = request.POST.get('export')
         if request.method == 'POST' and export is not None:
-            selected_format = request.POST['export_format']
+            selected_format = request.POST.get('export_format')
+            if not selected_format:
+                messages.error(request, 'Please select an export format.')
+                return redirect(reverse('images:view_imageset', args=(image_set_id,)))
             format = get_object_or_404(ExportFormat, id=selected_format)
             export_text, annotation_count, export_filename = export_format(format, imageset)
 
