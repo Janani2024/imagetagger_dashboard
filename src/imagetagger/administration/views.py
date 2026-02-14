@@ -5,8 +5,9 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db import transaction
 
-from .forms import AnnotationTypeCreationForm, AnnotationTypeEditForm
-from imagetagger.annotations.models import Annotation, AnnotationType
+from .forms import (AnnotationTypeCreationForm, AnnotationTypeEditForm,
+                     SuperAnnotationTypeCreationForm, SuperAnnotationTypeEditForm)
+from imagetagger.annotations.models import Annotation, AnnotationType, SuperAnnotationType
 
 
 @staff_member_required
@@ -61,6 +62,11 @@ def edit_annotation_type(request, annotation_type_id):
             selected_annotation_type.active = 'active' in request.POST.keys()
             selected_annotation_type.enable_concealed = 'enable_concealed' in request.POST.keys()
             selected_annotation_type.enable_blurred = 'enable_blurred' in request.POST.keys()
+            sat_id = request.POST.get('super_annotation_type', '')
+            if sat_id:
+                selected_annotation_type.super_annotation_type_id = int(sat_id)
+            else:
+                selected_annotation_type.super_annotation_type = None
             selected_annotation_type.save()
 
             messages.success(request, _('The annotation type was edited successfully.'))
@@ -117,3 +123,53 @@ def migrate_bounding_box_to_4_polygon(request, annotation_type_id):
         selected_annotation_type.node_count = 4
         selected_annotation_type.save()
     return redirect(reverse('administration:annotation_type', args=(annotation_type_id, )))
+
+
+# SuperAnnotationType views
+
+@staff_member_required
+def super_annotation_types(request):
+    return render(request, 'administration/super_annotation_type.html', {
+        'super_annotation_types': SuperAnnotationType.objects.all().order_by('name'),
+        'create_form': SuperAnnotationTypeCreationForm,
+    })
+
+
+@staff_member_required
+def super_annotation_type(request, super_annotation_type_id):
+    selected = get_object_or_404(SuperAnnotationType, id=super_annotation_type_id)
+    return render(request, 'administration/super_annotation_type.html', {
+        'super_annotation_types': SuperAnnotationType.objects.all().order_by('name'),
+        'super_annotation_type': selected,
+        'create_form': SuperAnnotationTypeCreationForm(),
+        'edit_form': SuperAnnotationTypeEditForm(instance=selected),
+    })
+
+
+@staff_member_required
+def create_super_annotation_type(request):
+    if request.method == 'POST':
+        form = SuperAnnotationTypeCreationForm(request.POST)
+        if form.is_valid():
+            if SuperAnnotationType.objects.filter(name=form.cleaned_data.get('name')).exists():
+                form.add_error('name', _('The name is already in use by a super annotation type.'))
+            else:
+                with transaction.atomic():
+                    sat = form.save()
+                messages.success(request, _('The super annotation type was created successfully.'))
+                return redirect(reverse('administration:super_annotation_type', args=(sat.id,)))
+    return redirect(reverse('administration:super_annotation_types'))
+
+
+@staff_member_required
+def edit_super_annotation_type(request, super_annotation_type_id):
+    selected = get_object_or_404(SuperAnnotationType, id=super_annotation_type_id)
+    if request.method == 'POST':
+        if not request.POST['name'] == selected.name and SuperAnnotationType.objects.filter(name=request.POST['name']).exists():
+            messages.error(request, _('The name is already in use by a super annotation type.'))
+        else:
+            selected.name = request.POST['name']
+            selected.active = 'active' in request.POST.keys()
+            selected.save()
+            messages.success(request, _('The super annotation type was edited successfully.'))
+    return redirect(reverse('administration:super_annotation_type', args=(super_annotation_type_id,)))

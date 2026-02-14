@@ -129,6 +129,11 @@
                         {% csrf_token %}
                         <input type="hidden" name="image_id" value="{{ selected_image.id }}">
                         <p>
+                          <select id="super_annotation_type_id" name="selected_super_annotation_type" class="form-control">
+                            <option value="-1">{% trans 'Annotation SuperType' %}</option>
+                          </select>
+                        </p>
+                        <p>
                           <select id="annotation_type_id" name="selected_annotation_type" class="form-control">
                             <option value="-1">{% trans 'Annotation Type' %}</option>
                           </select>

@@ -11,4 +11,8 @@ urlpatterns = [
     path('annotation_type/edit/<int:annotation_type_id>/', views.edit_annotation_type, name='edit_annotation_type'),
     path('annotation_type/migrate/bbt0p/<int:annotation_type_id>/', views.migrate_bounding_box_to_0_polygon, name='migrate_bbt0p'),
     path('annotation_type/migrate/bbt4p/<int:annotation_type_id>/', views.migrate_bounding_box_to_4_polygon, name='migrate_bbt4p'),
+    path('super_annotation_type/list/', views.super_annotation_types, name='super_annotation_types'),
+    path('super_annotation_type/<int:super_annotation_type_id>/', views.super_annotation_type, name='super_annotation_type'),
+    path('super_annotation_type/create/', views.create_super_annotation_type, name='create_super_annotation_type'),
+    path('super_annotation_type/edit/<int:super_annotation_type_id>/', views.edit_super_annotation_type, name='edit_super_annotation_type'),
 ]

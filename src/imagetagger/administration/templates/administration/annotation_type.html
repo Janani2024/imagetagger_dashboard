@@ -61,6 +61,14 @@
                                 </tr>
                                 <tr>
                                     <td>
+                                        <label for="id_super_annotation_type">{{ edit_form.super_annotation_type.label }}</label>
+                                    </td>
+                                    <td>
+                                        {% render_field edit_form.super_annotation_type class+='form-control' %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
                                         <b>Vector Type</b>
                                     </td>
                                     <td>
@@ -162,6 +170,14 @@
                                 </td>
                                 <td>
                                     {% render_field create_form.enable_concealed class+='form-control' %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <label for="id_super_annotation_type">{{ create_form.super_annotation_type.label }}</label>
+                                </td>
+                                <td>
+                                    {% render_field create_form.super_annotation_type class+='form-control' %}
                                 </td>
                             </tr>
                             <tr>

@@ -16,9 +16,10 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_2
     HTTP_403_FORBIDDEN
 
 from imagetagger.annotations.forms import ExportFormatCreationForm, ExportFormatEditForm
-from imagetagger.annotations.models import Annotation, AnnotationType, Export, \
+from imagetagger.annotations.models import Annotation, AnnotationType, SuperAnnotationType, Export, \
     Verification, ExportFormat
-from imagetagger.annotations.serializers import AnnotationSerializer, AnnotationTypeSerializer, AnnotationListSerializer, ExportFormatInfoSerializer
+from imagetagger.annotations.serializers import AnnotationSerializer, AnnotationTypeSerializer, \
+    AnnotationListSerializer, ExportFormatInfoSerializer, SuperAnnotationTypeSerializer
 from imagetagger.images.models import Image, ImageSet
 from imagetagger.users.models import Team
 
@@ -36,6 +37,7 @@ def annotate(request, image_id):
     if 'read' in imageset_perms:
         set_images = selected_image.image_set.images.all().order_by('name')
         annotation_types = AnnotationType.objects.filter(active=True)  # for the dropdown option
+        super_annotation_types = SuperAnnotationType.objects.filter(active=True)
         imageset_lock = selected_image.image_set.image_lock
         return render(request, 'annotations/annotate.html', {
             'selected_image': selected_image,
@@ -43,6 +45,7 @@ def annotate(request, image_id):
             'imageset_lock': imageset_lock,
             'set_images': set_images,
             'annotation_types': annotation_types,
+            'super_annotation_types': super_annotation_types,
         })
     else:
         return redirect(reverse('images:view_imageset', args=(selected_image.image_set.id,)))
@@ -676,7 +679,7 @@ def load_set_annotations(request) -> Response:
 @api_view(['GET'])
 def load_annotation_types(request) -> Response:
 
-    annotation_types = AnnotationType.objects.filter(active=True)
+    annotation_types = AnnotationType.objects.filter(active=True).select_related('super_annotation_type')
     serializer = AnnotationTypeSerializer(
         annotation_types,
         many=True,
@@ -684,6 +687,20 @@ def load_annotation_types(request) -> Response:
     )
     return Response({
         'annotation_types': serializer.data,
+    }, status=HTTP_200_OK)
+
+
+@login_required
+@api_view(['GET'])
+def load_super_annotation_types(request) -> Response:
+    super_annotation_types = SuperAnnotationType.objects.filter(active=True)
+    serializer = SuperAnnotationTypeSerializer(
+        super_annotation_types,
+        many=True,
+        context={'request': request},
+    )
+    return Response({
+        'super_annotation_types': serializer.data,
     }, status=HTTP_200_OK)
 
 

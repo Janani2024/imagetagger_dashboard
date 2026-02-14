@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Annotation, AnnotationType, Export, Verification, ExportFormat
+from .models import Annotation, AnnotationType, SuperAnnotationType, Export, Verification, ExportFormat
 
 
 @admin.register(Annotation)
@@ -18,5 +18,6 @@ class VerificationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(AnnotationType)
+admin.site.register(SuperAnnotationType)
 admin.site.register(Export)
 admin.site.register(ExportFormat)

@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/annotation/load/', views.load_annotations, name='load_annotations'),  # loads annotations of an image
     path('api/annotation/loadset/', views.load_set_annotations, name='load_set_annotations'),  # loads annotations of an image
     path('api/annotation/loadannotationtypes/', views.load_annotation_types, name='load_annotation_types'),  # loads all active annotation types
+    path('api/annotation/loadsuperannotationtypes/', views.load_super_annotation_types, name='load_super_annotation_types'),
     path('api/annotation/loadsetannotationtypes/', views.load_set_annotation_types, name='load_set_annotation_types'),  # loads annotations of an image
     path('api/annotation/loadfilteredset/', views.load_filtered_set_annotations, name='load_filtered_set_annotations'),  # loads filtered annotations of an image
     path('api/annotation/loadone/', views.load_annotation, name='load_annotation'),

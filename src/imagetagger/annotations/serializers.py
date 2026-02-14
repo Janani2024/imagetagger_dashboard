@@ -1,10 +1,21 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, CharField
 
-from .models import Annotation, AnnotationType, Verification, ExportFormat
+from .models import Annotation, AnnotationType, SuperAnnotationType, Verification, ExportFormat
 from imagetagger.images.serializers import ImageSerializer
 
 
+class SuperAnnotationTypeSerializer(ModelSerializer):
+    class Meta:
+        model = SuperAnnotationType
+        fields = (
+            'id',
+            'name',
+        )
+
+
 class AnnotationTypeSerializer(ModelSerializer):
+    super_annotation_type = SuperAnnotationTypeSerializer(read_only=True)
+
     class Meta:
         model = AnnotationType
         fields = (
@@ -14,6 +25,7 @@ class AnnotationTypeSerializer(ModelSerializer):
             'node_count',
             'enable_concealed',
             'enable_blurred',
+            'super_annotation_type',
         )
 
 

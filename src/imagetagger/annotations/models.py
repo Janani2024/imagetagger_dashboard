@@ -392,6 +392,17 @@ class Annotation(models.Model):
         return False
 
 
+class SuperAnnotationType(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return u'SuperAnnotationType: {0}'.format(self.name)
+
+    class Meta:
+        ordering = ['name']
+
+
 class AnnotationType(models.Model):
     class VECTOR_TYPE():
         BOUNDING_BOX = 1
@@ -407,6 +418,13 @@ class AnnotationType(models.Model):
     node_count = models.IntegerField(default=0)
     enable_concealed = models.BooleanField(default=True)
     enable_blurred = models.BooleanField(default=True)
+    super_annotation_type = models.ForeignKey(
+        SuperAnnotationType,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='annotation_types',
+    )
 
     def __str__(self):
         if self.active:

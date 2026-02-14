@@ -50,6 +50,7 @@ function calculateImageScale() {
   var gImageList;
   var gMousepos;
   let gAnnotationType = -1;
+  let gAllAnnotationTypes = [];
   let gCurrentAnnotations = [];
   let gHighlightedAnnotation;
 
@@ -284,7 +285,9 @@ function calculateImageScale() {
       headers: gHeaders,
       dataType: 'json',
       success: function (data) {
+        gAllAnnotationTypes = data.annotation_types;
         displayAnnotationTypeOptions(data.annotation_types);
+        loadSuperAnnotationTypeList();
       },
       error: function () {
         displayFeedback($('#feedback_connection_error'))
@@ -292,8 +295,76 @@ function calculateImageScale() {
     })
   }
 
+  function loadSuperAnnotationTypeList() {
+    $.ajax(API_ANNOTATIONS_BASE_URL + 'annotation/loadsuperannotationtypes/', {
+      type: 'GET',
+      headers: gHeaders,
+      dataType: 'json',
+      success: function (data) {
+        displaySuperAnnotationTypeOptions(data.super_annotation_types);
+      },
+      error: function () {
+        displayFeedback($('#feedback_connection_error'))
+      }
+    })
+  }
+
+  function displaySuperAnnotationTypeOptions(superAnnotationTypeList) {
+    let superAnnotationTypeSelect = $('#super_annotation_type_id');
+    $.each(superAnnotationTypeList, function (key, superAnnotationType) {
+      superAnnotationTypeSelect.append($('<option/>', {
+        value: superAnnotationType.id,
+        html: superAnnotationType.name,
+      }));
+    });
+  }
+
+  function handleSuperAnnotationTypeChange() {
+    let selectedSuperTypeId = parseInt($('#super_annotation_type_id').val());
+    let annotationTypeToolSelect = $('#annotation_type_id');
+    let annotationTypeFilterSelect = $('#filter_annotation_type');
+
+    let currentAnnotationTypeVal = annotationTypeToolSelect.val();
+
+    annotationTypeToolSelect.find('option:not(:first)').remove();
+    annotationTypeFilterSelect.find('option:not(:first)').remove();
+
+    let filteredTypes = gAllAnnotationTypes;
+    if (selectedSuperTypeId !== -1) {
+      filteredTypes = gAllAnnotationTypes.filter(function(annotationType) {
+        return annotationType.super_annotation_type !== null &&
+               annotationType.super_annotation_type.id === selectedSuperTypeId;
+      });
+    }
+
+    $.each(filteredTypes, function (key, annotationType) {
+      annotationTypeToolSelect.append($('<option/>', {
+        name: annotationType.name,
+        value: annotationType.id,
+        html: annotationType.name + ' (' + (key + 1) + ')',
+        id: 'annotation_type_' + (key + 1),
+        'data-vector-type': annotationType.vector_type,
+        'data-node-count': annotationType.node_count,
+        'data-blurred': annotationType.enable_blurred,
+        'data-concealed': annotationType.enable_concealed,
+      }));
+      annotationTypeFilterSelect.append($('<option/>', {
+        name: annotationType.name,
+        value: annotationType.id,
+        html: annotationType.name
+      }));
+    });
+
+    if (annotationTypeToolSelect.find('option[value="' + currentAnnotationTypeVal + '"]').length > 0) {
+      annotationTypeToolSelect.val(currentAnnotationTypeVal);
+    } else {
+      annotationTypeToolSelect.val('-1');
+    }
+
+    handleAnnotationTypeChange();
+  }
+
   function displayAnnotationTypeOptions(annotationTypeList) {
-    // TODO: empty the options?
     let annotationTypeFilterSelect = $('#filter_annotation_type');
     let annotationTypeToolSelect = $('#annotation_type_id');
     $.each(annotationTypeList, function (key, annotationType) {
@@ -1189,6 +1260,7 @@ function calculateImageScale() {
       document.activeElement.blur();
     });
     $('#draw_annotations').on('change', handleShowAnnotationsToggle);
+    $('select#super_annotation_type_id').on('change', handleSuperAnnotationTypeChange);
     $('select#annotation_type_id').on('change', handleAnnotationTypeChange);
 
     // register click events
