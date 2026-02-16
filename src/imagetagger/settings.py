@@ -251,6 +251,12 @@ class Render(Base):
     STATIC_ROOT = values.Value(environ_prefix='IT', default=path_join(BASE_DIR, 'staticfiles'))
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
+    # Cloudinary configuration
+    CLOUDINARY_CLOUD_NAME = values.Value(environ_prefix='IT', default='')
+    CLOUDINARY_API_KEY = values.Value(environ_prefix='IT', default='')
+    CLOUDINARY_API_SECRET = values.Value(environ_prefix='IT', default='')
+    USE_CLOUDINARY = values.BooleanValue(environ_prefix='IT', default=True)
+
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
         'whitenoise.middleware.WhiteNoiseMiddleware',

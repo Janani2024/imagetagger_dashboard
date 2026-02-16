@@ -26,6 +26,10 @@ from imagetagger.users.forms import TeamCreationForm
 from imagetagger.users.models import User, Team
 from imagetagger.tagger_messages.forms import TeamMessageCreationForm
 from imagetagger.base.filesystem import root, tmp
+from imagetagger.base.cloudinary_helper import (
+    is_cloudinary_configured, upload_to_cloudinary, get_cloudinary_url,
+    delete_from_cloudinary, delete_folder_from_cloudinary,
+)
 
 from .models import ImageSet, Image, SetTag
 from .forms import LabelUploadForm
@@ -233,14 +237,21 @@ def upload_image(request, imageset_id):
                                             width, height = image.size
                                         image_file.seek(0)
                                         imageset_dir.upload(img_fname, image_file)
-                                        # TODO rfrigg: Check if necessary
-                                        # shutil.chown(file_new_path, group=settings.UPLOAD_FS_GROUP)
+                                        # Upload to Cloudinary if configured
+                                        cloud_public_id = None
+                                        if is_cloudinary_configured():
+                                            image_file.seek(0)
+                                            cloud_public_id = upload_to_cloudinary(
+                                                image_file,
+                                                'imagetagger/{}/{}'.format(imageset.path, img_fname)
+                                            )
                                         new_image = Image(name=filename,
                                                           image_set=imageset,
                                                           filename=img_fname,
                                                           checksum=fchecksum,
                                                           width=width,
-                                                          height=height
+                                                          height=height,
+                                                          cloudinary_public_id=cloud_public_id,
                                                           )
                                         new_image.save()
                                     except (OSError, IOError):
@@ -290,6 +301,16 @@ def upload_image(request, imageset_id):
                             image.save()
                             buffer.seek(0)
                             imageset_dir.upload(fname, buffer)
+                            # Upload to Cloudinary if configured
+                            if is_cloudinary_configured():
+                                buffer.seek(0)
+                                cloud_public_id = upload_to_cloudinary(
+                                    buffer,
+                                    'imagetagger/{}/{}'.format(imageset.path, fname)
+                                )
+                                if cloud_public_id:
+                                    image.cloudinary_public_id = cloud_public_id
+                                    image.save()
                         except (OSError, IOError):
                             error['damaged'] = True
                     else:
@@ -356,6 +377,12 @@ def view_image(request, image_id):
     if not image.image_set.has_perm('read', request.user):
         return HttpResponseForbidden()
 
+    # Serve from Cloudinary if available
+    if image.cloudinary_public_id:
+        cloudinary_url = get_cloudinary_url(image.cloudinary_public_id)
+        if cloudinary_url:
+            return redirect(cloudinary_url)
+
     if settings.USE_NGINX_IMAGE_PROVISION:
         response = HttpResponse()
         # Let nginx determine the Content-Type
@@ -385,7 +412,11 @@ def list_images(request, image_set_id):
 def delete_images(request, image_id):
     image = get_object_or_404(Image, id=image_id)
     if image.image_set.has_perm('delete_images', request.user) and not image.image_set.image_lock:
-        root().remove(image.path())
+        delete_from_cloudinary(image.cloudinary_public_id)
+        try:
+            root().remove(image.path())
+        except Exception:
+            pass  # File may not exist on ephemeral filesystem
         image.delete()
         next_image = request.POST.get('next-image-id', '')
         if next_image == '':
@@ -523,7 +554,11 @@ def delete_imageset(request, imageset_id):
         return redirect(reverse('images:imageset', args=(imageset.pk,)))
 
     if request.method == 'POST':
-        root().removetree(imageset.root_path())
+        delete_folder_from_cloudinary('imagetagger/{}'.format(imageset.path))
+        try:
+            root().removetree(imageset.root_path())
+        except Exception:
+            pass  # Directory may not exist on ephemeral filesystem
         imageset.delete()
         return redirect(reverse('users:team', args=(imageset.team.id,)))
 

@@ -17,6 +17,7 @@ class Image(models.Model):
     checksum = models.BinaryField()
     width = models.IntegerField(default=800)
     height = models.IntegerField(default=600)
+    cloudinary_public_id = models.CharField(max_length=255, null=True, blank=True)
 
     def path(self):
         return path.combine(self.image_set.root_path(), self.filename)
