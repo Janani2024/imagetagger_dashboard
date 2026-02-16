@@ -390,11 +390,20 @@ def view_image(request, image_id):
         response['X-Accel-Redirect'] = "/ngx_static_dn/{}".format(image.relative_path())
         response["Content-Length"] = root().getsize(image.path())
     else:
-        bytes_io = BytesIO()
-        root().download(image.path(), bytes_io)
-        bytes_io.seek(0)
-        response = FileResponse(bytes_io, content_type="image")
-        response["Content-Length"] = bytes_io.getbuffer().nbytes
+        try:
+            bytes_io = BytesIO()
+            root().download(image.path(), bytes_io)
+            bytes_io.seek(0)
+            response = FileResponse(bytes_io, content_type="image")
+            response["Content-Length"] = bytes_io.getbuffer().nbytes
+        except Exception:
+            return HttpResponse(
+                'Image not found on server. cloudinary_public_id={}, '
+                'cloudinary_configured={}, USE_CLOUDINARY={}'.format(
+                    image.cloudinary_public_id,
+                    is_cloudinary_configured(),
+                    getattr(settings, 'USE_CLOUDINARY', 'NOT SET'),
+                ), status=404)
     return response
 
 
