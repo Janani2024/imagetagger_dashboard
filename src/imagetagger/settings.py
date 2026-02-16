@@ -231,6 +231,12 @@ class Base(Configuration):
     SENTRY_DSN = values.Value(environ_prefix='IT', environ_required=SENTRY_REPORTING_ENABLED)
     SENTRY_SEND_DEFAULT_PII = values.BooleanValue(environ_prefix='IT', default=False)
 
+    # Cloudinary configuration (disabled by default, enabled on Render)
+    CLOUDINARY_CLOUD_NAME = values.Value(environ_prefix='IT', default='')
+    CLOUDINARY_API_KEY = values.Value(environ_prefix='IT', default='')
+    CLOUDINARY_API_SECRET = values.Value(environ_prefix='IT', default='')
+    USE_CLOUDINARY = values.BooleanValue(environ_prefix='IT', default=False)
+
 
 class Dev(Base):
     DEBUG = values.BooleanValue(environ_prefix='IT', default=True)
@@ -251,10 +257,7 @@ class Render(Base):
     STATIC_ROOT = values.Value(environ_prefix='IT', default=path_join(BASE_DIR, 'staticfiles'))
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-    # Cloudinary configuration
-    CLOUDINARY_CLOUD_NAME = values.Value(environ_prefix='IT', default='')
-    CLOUDINARY_API_KEY = values.Value(environ_prefix='IT', default='')
-    CLOUDINARY_API_SECRET = values.Value(environ_prefix='IT', default='')
+    # Enable Cloudinary on Render (credentials come from env vars)
     USE_CLOUDINARY = values.BooleanValue(environ_prefix='IT', default=True)
 
     MIDDLEWARE = [

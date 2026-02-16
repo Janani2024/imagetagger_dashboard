@@ -1,17 +1,24 @@
 import logging
 
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+try:
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+    CLOUDINARY_AVAILABLE = True
+except ImportError:
+    logger.warning('cloudinary package not installed. Cloudinary features disabled.')
+    CLOUDINARY_AVAILABLE = False
 
 
 def is_cloudinary_configured():
     """Check if Cloudinary settings are available and enabled."""
     return (
-        getattr(settings, 'USE_CLOUDINARY', False)
+        CLOUDINARY_AVAILABLE
+        and getattr(settings, 'USE_CLOUDINARY', False)
         and getattr(settings, 'CLOUDINARY_CLOUD_NAME', '')
         and getattr(settings, 'CLOUDINARY_API_KEY', '')
         and getattr(settings, 'CLOUDINARY_API_SECRET', '')
