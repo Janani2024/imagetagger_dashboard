@@ -248,7 +248,7 @@ class Dev(Base):
 
 
 class Render(Base):
-    DEBUG = values.BooleanValue(environ_prefix='IT', default=True)
+    DEBUG = values.BooleanValue(environ_prefix='IT', default=False)
     SECRET_KEY = values.Value(environ_prefix='IT', environ_required=True)
     DB_HOST = values.Value(environ_prefix='IT', environ_required=True)
     DB_PASSWORD = values.Value(environ_prefix='IT', environ_required=True)

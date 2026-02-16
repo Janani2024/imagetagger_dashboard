@@ -241,9 +241,11 @@ def upload_image(request, imageset_id):
                                         cloud_public_id = None
                                         if is_cloudinary_configured():
                                             image_file.seek(0)
+                                            # Strip extension to avoid double extension in Cloudinary URL
+                                            cloud_name, _ = splitext(img_fname)
                                             cloud_public_id = upload_to_cloudinary(
                                                 image_file,
-                                                'imagetagger/{}/{}'.format(imageset.path, img_fname)
+                                                'imagetagger/{}/{}'.format(imageset.path, cloud_name)
                                             )
                                         new_image = Image(name=filename,
                                                           image_set=imageset,
@@ -304,9 +306,11 @@ def upload_image(request, imageset_id):
                             # Upload to Cloudinary if configured
                             if is_cloudinary_configured():
                                 buffer.seek(0)
+                                # Strip extension to avoid double extension in Cloudinary URL
+                                cloud_name, _ = splitext(fname)
                                 cloud_public_id = upload_to_cloudinary(
                                     buffer,
-                                    'imagetagger/{}/{}'.format(imageset.path, fname)
+                                    'imagetagger/{}/{}'.format(imageset.path, cloud_name)
                                 )
                                 if cloud_public_id:
                                     image.cloudinary_public_id = cloud_public_id
@@ -390,20 +394,11 @@ def view_image(request, image_id):
         response['X-Accel-Redirect'] = "/ngx_static_dn/{}".format(image.relative_path())
         response["Content-Length"] = root().getsize(image.path())
     else:
-        try:
-            bytes_io = BytesIO()
-            root().download(image.path(), bytes_io)
-            bytes_io.seek(0)
-            response = FileResponse(bytes_io, content_type="image")
-            response["Content-Length"] = bytes_io.getbuffer().nbytes
-        except Exception:
-            return HttpResponse(
-                'Image not found on server. cloudinary_public_id={}, '
-                'cloudinary_configured={}, USE_CLOUDINARY={}'.format(
-                    image.cloudinary_public_id,
-                    is_cloudinary_configured(),
-                    getattr(settings, 'USE_CLOUDINARY', 'NOT SET'),
-                ), status=404)
+        bytes_io = BytesIO()
+        root().download(image.path(), bytes_io)
+        bytes_io.seek(0)
+        response = FileResponse(bytes_io, content_type="image")
+        response["Content-Length"] = bytes_io.getbuffer().nbytes
     return response
 
 
